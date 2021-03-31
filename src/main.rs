@@ -12,11 +12,15 @@ use cli::{Opt, Target};
 impl fmt::Display for Target {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Target::When { time } => write!(f, "{:?}", time),
+            Target::When { time: _ } => write!(f, ""),
             Target::On { event } => write!(f, "[Install]\nWantedBy={}", event),
             Target::No => write!(f, ""),
         }
     }
+}
+
+fn timer_entry(timer: &str) -> String {
+    String::from("OnCalendar=") + timer
 }
 
 fn main() {
@@ -39,7 +43,6 @@ fn main() {
 
     let target = opt.target.unwrap_or_default();
 
-    // let configPath = env::var("XDG_CONFIG_HOME");
     let mut service_file = dirs::config_dir().unwrap();
     service_file.push("systemd/user");
     service_file.push(progname);
@@ -59,5 +62,24 @@ fn main() {
         progpath.to_str().unwrap(),
         target
     );
-    fs::write(service_file, content).expect("Unable to write Service File");
+    fs::write(service_file.clone(), content).expect("Unable to write Service File");
+    if let Target::When { time } = target {
+        service_file.set_extension("timer");
+
+        let timer_content = formatdoc!(
+            "
+        [Unit]
+        Description=Runs {} on a timer
+        
+        [Timer]
+        {}
+
+        [Install]
+        WantedBy=timers.target
+        ",
+            progname,
+            timer_entry(time.as_ref())
+        );
+        fs::write(service_file.clone(), timer_content).expect("Unable to write Timer File");
+    }
 }

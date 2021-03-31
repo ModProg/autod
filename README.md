@@ -1,7 +1,8 @@
 # autod
 
 - [x] Create oneshot service with `autod <command>`
-- [ ] Create service with startup rule `autod <command> when <SystemdTarget|Duration|TimePattern>`
+- [x] Create service to run on SystemdTarget `autod <command> on <SystemdTarget>`
+- [x] Create service to run on SystemdTimer `autod <command> when <TimePattern>`
 - [ ]  `run` and `enable`
 - [ ] Description
 - [ ] User/System
