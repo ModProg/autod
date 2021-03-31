@@ -4,9 +4,17 @@ version = "0.1.0"
 authors = ["Roland Fredenhagen <important@van-fredenhagen.de>"]
 edition = "2018"
 
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 dirs = "3.0"
 indoc = "1.0"
-structopt = "0.3"
+
+[dependencies.clap]
+version = "3.0.0-beta.2"
+features = ["wrap_help"]
+
+[build-dependencies]
+clap_generate = "3.0.0-beta.2"
+clap = "3.0.0-beta.2"

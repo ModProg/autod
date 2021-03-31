@@ -1,69 +1,48 @@
+mod cli;
+
+use clap::Clap;
+use dirs;
 use indoc::formatdoc;
-use std::fmt;
 use std::fs;
 use std::process::Command;
-use std::{env, path::PathBuf};
-use structopt::StructOpt;
+use std::{fmt, path::PathBuf, str};
 
-extern crate dirs;
-
-#[derive(Debug, StructOpt)]
-#[structopt(name = "autod")]
-struct Opt {
-    command: PathBuf,
-
-    #[structopt(subcommand)]
-    sub_command: Option<When>,
-}
-
-#[derive(Debug, StructOpt)]
-enum When {
-    When { time: String },
-}
-
-#[derive(Debug)]
-enum Target {
-    SimpleTarget(String),
-    No,
-}
+use cli::{Opt, Target};
 
 impl fmt::Display for Target {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-fn get_target(args: Vec<String>) -> Result<Target, String> {
-    if args.len() < 3 {
-        return Ok(Target::No);
-    }
-    let when = &args[2];
-    if when == "when" {
-        let target = &args[3];
-        Ok(Target::SimpleTarget(target.into()))
-    } else {
-        Ok(Target::No)
+        match self {
+            Target::When { time } => write!(f, "{:?}", time),
+            Target::On { event } => write!(f, "[Install]\nWantedBy={}", event),
+            Target::No => write!(f, ""),
+        }
     }
 }
 
 fn main() {
-    let opt = Opt::from_args();
-    let args: Vec<String> = env::args().collect();
-    let prog = &args[1].clone();
+    let opt = Opt::parse();
+    println!("{:?}", opt);
+    let prog = opt.command;
+    let progpath = if prog.is_absolute() {
+        prog
+    } else {
+        let progname = prog.file_name().map(|p| p.to_str()).unwrap().unwrap();
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg(String::from("command -v ") + progname)
+            .output()
+            .expect("failed to execute command -v");
+        PathBuf::from(str::from_utf8(output.stdout.as_slice()).unwrap().trim()) //.expect("Unable to finde Program ")
+    };
 
-    let target = get_target(args).expect("Failed to parse when parameter");
+    let progname = progpath.file_name().unwrap().to_str().unwrap();
 
-    let output = Command::new("sh")
-        .arg("-c")
-        .arg(String::from("command -v ") + prog)
-        .output()
-        .expect("failed to execute command -v");
-    let progpath = String::from_utf8(output.stdout).unwrap();
+    let target = opt.target.unwrap_or_default();
 
     // let configPath = env::var("XDG_CONFIG_HOME");
     let mut service_file = dirs::config_dir().unwrap();
     service_file.push("systemd/user");
-    service_file.push(prog);
+    service_file.push(progname);
     service_file.set_extension("service");
 
     let content = formatdoc!(
@@ -73,10 +52,11 @@ fn main() {
 
         [Service]
         ExecStart={}
+
         {}
         ",
-        prog,
-        progpath,
+        progname,
+        progpath.to_str().unwrap(),
         target
     );
     fs::write(service_file, content).expect("Unable to write Service File");
