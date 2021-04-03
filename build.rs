@@ -10,9 +10,11 @@ fn main() {
         Some(outdir) => outdir,
     };
 
-    outdir.push("/comp");
+    outdir.push("/target/comp");
 
     let mut app = Opt::into_app();
 
-    clap_generate::generate_to::<generators::Zsh, _, _>(&mut app, "autod", outdir)
+    clap_generate::generate_to::<generators::Zsh, _, _>(
+        &mut app, "autod", outdir,
+    )
 }
