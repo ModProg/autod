@@ -4,18 +4,22 @@ use clap::IntoApp;
 use clap_generate::{self, generators};
 use std::env;
 
+const X: bool = true;
+
+include!("src/calendar.rs");
 include!("src/cli.rs");
 
 fn main() {
-    let mut outdir = env::var_os("CARGO_MANIFEST_DIR")
-        .expect("Unable to find Builddir");
+    let mut outdir = match env::var_os("CARGO_MANIFEST_DIR") {
+        None => return,
+        Some(outdir) => outdir,
+    };
+
     outdir.push("/target/comp");
-    std::fs::create_dir_all(&outdir)
-        .expect("Could not create completions dir.");
 
     let mut app = Opt::into_app();
 
     clap_generate::generate_to::<generators::Zsh, _, _>(
         &mut app, "autod", outdir,
-    );
+    )
 }

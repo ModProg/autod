@@ -4,12 +4,16 @@ version = "0.1.0"
 authors = ["Roland Fredenhagen <important@van-fredenhagen.de>"]
 edition = "2018"
 
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 dirs = "3.0"
 indoc = "1.0"
+unwrap = "1.2.1"
+sanitize-filename = "0.3.0"
+chrono = "0.4.19"
+regex = "1"
+lazy_static = "1.4.0"
 
 [dependencies.clap]
 version = "3.0.0-beta.2"
@@ -18,3 +22,7 @@ features = ["wrap_help"]
 [build-dependencies]
 clap_generate = "3.0.0-beta.2"
 clap = "3.0.0-beta.2"
+chrono = "0.4.19"
+unwrap = "1.2.1"
+regex = "1"
+lazy_static = "1.4.0"
